@@ -48,6 +48,6 @@ Sau khi chuyển `REDIS_URL` sang Secret Manager, kiểm tra lại `/health` 200
 
 ## CI/CD và sự cố đã xử lý
 
-[GitHub Actions run 36402569029](https://github.com/bobui147/K4-L3A-DAY12-BuiTungDuong-2A202602775-CloudServicesAndDeployment/actions/runs/36402569029) đã chạy thành công bước test và build. Workflow triển khai phiên bản mới lên Cloud Run sau khi hai bước này đạt, chỉ trên nhánh `main`.
+[GitHub Actions run 36404849773](https://github.com/bobui147/K4-L3A-DAY12-BuiTungDuong-2A202602775-CloudServicesAndDeployment/actions/runs/36404849773) đã hoàn tất thành công cả ba job `test`, `build`, `deploy` cùng smoke test `/health`, `/ready`. Cloud Run revision `day12-agent-00003-w6p` chạy image gắn commit `3849b61e7a5e876f60b7f870b6ca06dece02dda1` và nhận 100% traffic. Workflow chỉ deploy từ nhánh `main` sau khi test và build xanh.
 
 Lần đầu bật `compute.googleapis.com`, Google Cloud trả `The service is currently being deactivated and deactivation must complete before activation can occur`. Tôi kiểm tra trạng thái API rồi chờ tác vụ vô hiệu hóa kết thúc; lần bật lại sau đó thành công. Sau khi kích hoạt `redis.googleapis.com`, tôi tạo Memorystore, triển khai Cloud Run và xác nhận Redis kết nối được qua `/ready`.
