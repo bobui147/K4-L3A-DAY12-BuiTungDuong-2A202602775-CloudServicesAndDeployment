@@ -1,0 +1,75 @@
+name: CI and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run checkpoints without external services
+        env:
+          AGENT_API_KEY: ci-dummy
+          REDIS_URL: fake://
+        run: python -m pytest tests/test_cp1.py tests/test_cp2.py tests/test_cp3.py tests/test_cp4.py -m 'not docker' -q
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build container image
+        run: docker build -t day12-agent:ci .
+
+  deploy:
+    needs: [test, build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.GCP_REDIS_URL != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: labcloud-510008
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v3
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
+          IMAGE="asia-southeast1-docker.pkg.dev/labcloud-510008/day12-agent/agent:${GITHUB_SHA}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          gcloud run deploy day12-agent \
+            --project=labcloud-510008 \
+            --region=asia-southeast1 \
+            --image="$IMAGE" \
+            --network=default \
+            --subnet=default \
+            --vpc-egress=private-ranges-only \
+            --execution-environment=gen2 \
+            --min-instances=0 \
+            --max-instances=3 \
+            --memory=512Mi \
+            --service-account=day12-runtime@labcloud-510008.iam.gserviceaccount.com \
+            --set-secrets=AGENT_API_KEY=day12-agent-api-key:latest \
+            --set-env-vars=REDIS_URL=${{ vars.GCP_REDIS_URL }} \
+            --allow-unauthenticated \
+            --quiet
+      - name: Smoke test
+        run: |
+          URL=$(gcloud run services describe day12-agent --project=labcloud-510008 --region=asia-southeast1 --format='value(status.url)')
+          curl --fail --silent --show-error "$URL/health"
+          curl --fail --silent --show-error "$URL/ready"

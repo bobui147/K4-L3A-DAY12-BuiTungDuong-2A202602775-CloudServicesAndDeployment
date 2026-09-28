@@ -1,5 +1,7 @@
 # Secrets — KHÔNG BAO GIỜ commit
 .env
+.secret-upload
+gha-creds-*.json
 *.pem
 *.key
 
