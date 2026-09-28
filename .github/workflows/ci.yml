@@ -32,7 +32,7 @@ jobs:
 
   deploy:
     needs: [test, build]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.GCP_REDIS_URL != ''
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -64,9 +64,7 @@ jobs:
             --max-instances=3 \
             --memory=512Mi \
             --service-account=day12-runtime@labcloud-510008.iam.gserviceaccount.com \
-            --set-secrets=AGENT_API_KEY=day12-agent-api-key:latest \
-            --set-env-vars=REDIS_URL=${{ vars.GCP_REDIS_URL }} \
-            --allow-unauthenticated \
+            --set-secrets=AGENT_API_KEY=day12-agent-api-key:latest,REDIS_URL=day12-redis-url:latest \
             --quiet
       - name: Smoke test
         run: |

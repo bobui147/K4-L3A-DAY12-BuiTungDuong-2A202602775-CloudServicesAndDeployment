@@ -3,7 +3,7 @@
 > **Bài làm cá nhân.** Trả lời bằng lời của chính bạn, dựa trên những gì bạn
 > quan sát được khi chạy code — không sao chép đáp án của người khác.
 >
-> Cách trả lời: thay dòng `> *Câu trả lời của bạn*` bằng câu trả lời.
+> Các câu trả lời bên dưới dựa trên kết quả kiểm thử local và trạng thái Google Cloud được ghi lại.
 > `grade.py` đếm số câu đã trả lời (15 điểm cho 10 câu).
 >
 > Họ và tên: Bùi Tùng Dương  Mã học viên: 2A202602775
@@ -118,4 +118,4 @@ Ghi lại **một** lỗi bạn gặp khi deploy lên cloud (build fail, health 
 timeout, sai REDIS_URL, app không đọc `$PORT`...): thông báo lỗi là gì, bạn
 tìm ra nguyên nhân bằng cách nào, và sửa ra sao?
 
-> *Câu trả lời của bạn*
+> Khi bật `compute.googleapis.com` cho project `labcloud-510008`, CLI báo `The service is currently being deactivated and deactivation must complete before activation can occur`. Tôi kiểm tra bằng `gcloud services list --available`: Compute và Redis đều `DISABLED`, còn Redis phụ thuộc Compute. Tôi chờ tác vụ vô hiệu hóa ở phía Google Cloud kết thúc rồi chạy lại lệnh bật Compute; lần này thành công. Sau đó tôi bật Redis API, tạo Memorystore và triển khai Cloud Run. `/ready` trên URL công khai trả 200 với `redis:true`, xác nhận đã sửa xong lỗi triển khai.
